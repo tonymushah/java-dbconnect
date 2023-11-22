@@ -245,27 +245,27 @@ public class DBConnect {
         return modified;
     }
 
-    public Object[] select(Class to_use, String... columns_names) throws Exception {
+    public <T> T[] select(Class<T> to_use, String... columns_names) throws Exception {
         if (to_use.isAnnotationPresent(mg.tonymushah.dbconnection.utils.annotations.Table.class) == false) {
             throw new Exception("@Table not specified in class " + to_use.getName());
         } else {
             String table_touse = ((mg.tonymushah.dbconnection.utils.annotations.Table) (to_use
                     .getAnnotationsByType(mg.tonymushah.dbconnection.utils.annotations.Table.class)[0])).name();
             if (columns_names == null) {
-                Class to_useClass = to_use;
+                Class<T> to_useClass = to_use;
                 String query = "select * from " + table_touse;
                 Statement stmt = this.createStatement();
                 ResultSet res = stmt.executeQuery(query);
                 return this.resultset_toObjects(res, to_useClass);
             } else if (columns_names.length == 0) {
-                Class to_useClass = to_use;
+                Class<T> to_useClass = to_use;
                 String query = "select * from " + table_touse;
                 Statement stmt = this.createStatement();
                 ResultSet res = stmt.executeQuery(query);
                 return this.resultset_toObjects(res, to_useClass);
             } else {
 
-                Class to_useClass = to_use;
+                Class<T> to_useClass = to_use;
                 String query = "select ";
                 for (int i = 0; i < columns_names.length; i++) {
                     if (i == columns_names.length - 1) {
@@ -434,12 +434,12 @@ public class DBConnect {
         return this.executeQuery_withoutConnect_Close(query);
     }
 
-    public Object[] resultset_toObjects(ResultSet res, Class to_useClass) throws Exception {
+    public <T> T[] resultset_toObjects(ResultSet res, Class<T> to_useClass) throws Exception {
         if (to_useClass.isAnnotationPresent(mg.tonymushah.dbconnection.utils.annotations.Table.class) == false) {
             throw new Exception("@Table not specified in class " + to_useClass.getName());
         } else {
 
-            Object[] array = (Object[]) java.lang.reflect.Array.newInstance(to_useClass, 1);
+            T[] array = (T[]) java.lang.reflect.Array.newInstance(to_useClass, 1);
             int index = 0;
             while (res.next()) {
                 // System.out.println("index :" + index);
@@ -458,7 +458,7 @@ public class DBConnect {
                         }
                     }
                 } else {
-                    TCeutils toUse = new TCeutils(to_useClass.getConstructor().newInstance());
+                    TCeutils<T> toUse = new TCeutils<T>(to_useClass.getConstructor().newInstance());
                     for (Field object : toUse.getFields()) {
                         try {
                             toUse.setInField(

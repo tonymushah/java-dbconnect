@@ -14,10 +14,10 @@ public class PostGresDefault extends DBConnect{
         super("jdbc", 
             "postgresql", 
             null, 
-            "localhost", 
+            "127.0.0.1", 
             5432, 
-            "event_service", 
-            "event_manager", 
+            "test_tony", 
+            "test_tony", 
             "etu001844"
         );
     }
