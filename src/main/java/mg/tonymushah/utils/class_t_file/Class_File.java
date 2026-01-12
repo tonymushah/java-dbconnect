@@ -6,14 +6,14 @@ import mg.tonymushah.utils.TCeutils;
 import mg.tonymushah.utils.TUtils;
 
 
-public class Class_File {
+public class Class_File<T extends Object> {
     File fishing;
-    Object to_use;
-    TCeutils to_p;
-    public void setTo_p(TCeutils to_p) {
+    T to_use;
+    TCeutils<T> to_p;
+    public void setTo_p(TCeutils<T> to_p) {
         this.to_p = to_p;
     }
-    public TCeutils getTo_p() {
+    public TCeutils<T> getTo_p() {
         return to_p;
     }
     public File getFishing() {
@@ -22,7 +22,7 @@ public class Class_File {
     public Object getTo_use() {
         return to_use;
     }
-    public void setTo_use(Object to_use) {
+    public void setTo_use(T to_use) {
         this.to_use = to_use;
     }
     public void setcnFishing(File fishing) {
@@ -102,21 +102,21 @@ public class Class_File {
             return this.generate_Cfilename();
         }
     }
-    public Class_File(Object to_write){
+    public Class_File(T to_write){
         this.setTo_use(to_write);
-        this.setTo_p(new TCeutils(to_write));
+        this.setTo_p(new TCeutils<T>(to_write));
         this.setcnFishing(new File(this.generate_filename()));
         this.write_class_to_file();
     }
-    public Class_File(Object to_write, String path){
+    public Class_File(T to_write, String path){
         this.setTo_use(to_write);
-        this.setTo_p(new TCeutils(to_write));
+        this.setTo_p(new TCeutils<T>(to_write));
         this.setcnFishing(new File(path + this.generate_filename()));
         this.write_class_to_file();
     }
-    public Class_File(Object to_write, String path , String additional){
+    public Class_File(T to_write, String path , String additional){
         this.setTo_use(to_write);
-        this.setTo_p(new TCeutils(to_write));
+        this.setTo_p(new TCeutils<T>(to_write));
         this.setcnFishing(new File(path + this.generate_filename() + additional));
         this.write_class_to_file();
     }

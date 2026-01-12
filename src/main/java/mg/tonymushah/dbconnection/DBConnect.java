@@ -1,8 +1,11 @@
 package mg.tonymushah.dbconnection;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.sql.*;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import mg.tonymushah.dbconnection.utils.Insert_into;
 import mg.tonymushah.dbconnection.utils.Predicate;
@@ -12,126 +15,24 @@ import mg.tonymushah.dbconnection.utils.annotations.PrimaryKey;
 import mg.tonymushah.utils.TCeutils;
 import mg.tonymushah.utils.TUtils;
 
-public class DBConnect {
-    private String api;
-    private String dbtype;
-    private String pilot;
-    private String host;
-    private int port;
-    private String dbName;
+public abstract class DBConnect implements AutoCloseable {
     private Connection connection;
-    private String username;
-    private String password;
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setApi(String api) {
-        this.api = api;
-    }
-
-    public void setConnection(Connection connection) {
-        this.connection = connection;
-    }
-
-    public void setDbName(String dbName) {
-        this.dbName = dbName;
-    }
-
-    public void setDbtype(String dbtype) {
-        this.dbtype = dbtype;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public void setPilot(String pilot) {
-        this.pilot = pilot;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public String getApi() {
-        return api;
-    }
-
     public Connection getConnection() {
         return connection;
     }
-
-    public String getDbName() {
-        return dbName;
+    public void setConnection(Connection connection) {
+        this.connection = connection;
     }
-
-    public String getDbtype() {
-        return dbtype;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public String getPilot() {
-        return pilot;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public DBConnect(
-            String api,
-            String dbtype,
-            String pilot,
-            String host,
-            int port,
-            String dbName,
-            String username,
-            String password) {
-        this.setApi(api);
-        this.setDbName(dbName);
-        this.setDbtype(dbtype);
-        this.setHost(host);
-        this.setPilot(pilot);
-        this.setPort(port);
-        this.setUsername(username);
-        this.setPassword(password);
-    }
-
-    public void connect() throws Exception {
-        String url = "" + this.getApi() + ":" + this.getDbtype() + ":" + this.getPilot() + ":" + this.getHost() + ":"
-                + this.getPort() + ":" + this.getDbName();
-        this.setConnection(DriverManager.getConnection(url, this.getUsername(), this.getPassword()));
-        this.connection.setAutoCommit(false);
-    }
-
-    public void close() throws Exception {
+    @Override
+    public void close() throws SQLException {
         this.connection.close();
         this.setConnection(null);
     }
-
-    public Statement createStatement() throws Exception {
+    public abstract void connect() throws SQLException;
+    public Statement createStatement() throws SQLException {
         return this.connection.createStatement();
     }
-
-    @Deprecated
-    public Object[] executeQuery(String query, Class<?> to_use) throws Exception {
+    public <T> T[] executeQuery(String query, Class<T> to_use) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SQLException {
         try {
             this.close();
         } catch (Exception e) {
@@ -139,7 +40,7 @@ public class DBConnect {
         } finally {
             this.connect();
         }
-        Object[] array = (Object[]) java.lang.reflect.Array.newInstance(to_use, 1);
+        T[] array = (T[]) java.lang.reflect.Array.newInstance(to_use, 1);
         int index = 0;
         Statement stmt = this.createStatement();
         ResultSet res = stmt.executeQuery(query);
@@ -147,7 +48,7 @@ public class DBConnect {
             // System.out.println("index :" + index);
             if (index == 0) {
                 array[0] = to_use.getConstructor().newInstance();
-                TCeutils<?> toUse = new TCeutils<Object>(array[0]);
+                TCeutils<?> toUse = new TCeutils<T>(array[0]);
                 for (Field object : toUse.getFields()) {
                     try {
                         toUse.setInField(object.getName(), res.getString(object.getName()));
@@ -158,7 +59,7 @@ public class DBConnect {
                     }
                 }
             } else {
-                TCeutils<?> toUse = new TCeutils<Object>(to_use.getConstructor().newInstance());
+                TCeutils<T> toUse = new TCeutils<T>(to_use.getConstructor().newInstance());
                 for (Field object : toUse.getFields()) {
                     try {
                         toUse.setInField(object.getName(), res.getString(object.getName()));
@@ -179,9 +80,8 @@ public class DBConnect {
         return array;
     }
 
-    @Deprecated
-    public Object[] executeQuery_withoutConnect_Close(String query, Class<?> to_use) throws Exception {
-        Object[] array = (Object[]) java.lang.reflect.Array.newInstance(to_use, 1);
+    public <T> T[] executeQuery_withoutConnect_Close(String query, Class<T> to_use) throws Exception {
+        T[] array = (T[]) java.lang.reflect.Array.newInstance(to_use, 1);
         int index = 0;
         Statement stmt = this.createStatement();
         ResultSet res = stmt.executeQuery(query);
@@ -189,7 +89,7 @@ public class DBConnect {
             // System.out.println("index :" + index);
             if (index == 0) {
                 array[0] = to_use.getConstructor().newInstance();
-                TCeutils toUse = new TCeutils(array[0]);
+                TCeutils<T> toUse = new TCeutils<T>(array[0]);
                 for (Field object : toUse.getFields()) {
                     try {
                         toUse.setInField(object.getName(), res.getString(object.getName()));
@@ -200,7 +100,7 @@ public class DBConnect {
                     }
                 }
             } else {
-                TCeutils toUse = new TCeutils(to_use.getConstructor().newInstance());
+                TCeutils<T> toUse = new TCeutils<T>(to_use.getConstructor().newInstance());
                 for (Field object : toUse.getFields()) {
                     try {
                         toUse.setInField(object.getName(), res.getString(object.getName()));
@@ -219,7 +119,6 @@ public class DBConnect {
         return array;
     }
 
-    @Deprecated
     public boolean executeQuery(String query) throws Exception {
         try {
             this.close();
@@ -237,7 +136,7 @@ public class DBConnect {
         return modified;
     }
 
-    @Deprecated
+
     public boolean executeQuery_withoutConnect_Close(String query) throws Exception {
         Statement stmt = this.createStatement();
         boolean modified = stmt.execute(query);
@@ -283,7 +182,7 @@ public class DBConnect {
         }
     }
 
-    public Object[] selectWhere(Class to_use, String[] columns_names, Predicate[] predicates) throws Exception {
+    public <T extends Object> T[] selectWhere(Class<T> to_use, String[] columns_names, Predicate[] predicates) throws Exception {
         if (to_use.isAnnotationPresent(mg.tonymushah.dbconnection.utils.annotations.Table.class) == false) {
             throw new Exception("@Table not specified in class " + to_use.getName());
         } else {
@@ -291,7 +190,7 @@ public class DBConnect {
                     .getAnnotationsByType(mg.tonymushah.dbconnection.utils.annotations.Table.class)[0])).name();
             if (columns_names == null) {
 
-                Class to_useClass = to_use;
+                Class<T> to_useClass = to_use;
                 String query = "select * from " + table_touse + " where ";
                 for (int i = 0; i < predicates.length; i++) {
                     if (i == predicates.length - 1) {
@@ -304,7 +203,7 @@ public class DBConnect {
                 ResultSet res = stmt.executeQuery(query);
                 return this.resultset_toObjects(res, to_useClass);
             } else if (columns_names.length == 0) {
-                Class to_useClass = to_use;
+                Class<T> to_useClass = to_use;
                 String query = "select * from " + table_touse + " where ";
                 for (int i = 0; i < predicates.length; i++) {
                     if (i == predicates.length - 1) {
@@ -317,7 +216,7 @@ public class DBConnect {
                 ResultSet res = stmt.executeQuery(query);
                 return this.resultset_toObjects(res, to_useClass);
             } else {
-                Class to_useClass = to_use;
+                Class<T> to_useClass = to_use;
                 String query = "select ";
                 for (int i = 0; i < columns_names.length; i++) {
                     if (i == columns_names.length - 1) {
@@ -341,18 +240,18 @@ public class DBConnect {
         }
     }
 
-    public boolean insert(Object to_use) throws Exception {
+    public <T> boolean insert(T to_use) throws Exception {
         String part_1 = Insert_into.insert_into_part(to_use.getClass());
         String part_2 = Insert_into.values_part(to_use);
         return this.executeQuery_withoutConnect_Close(part_1 + part_2);
     };
 
-    public boolean delete(Object to_use) throws Exception {
-        Class to_useClass = to_use.getClass();
+    public <T> boolean delete(T to_use) throws Exception {
+        Class<?> to_useClass = to_use.getClass();
         if (to_useClass.isAnnotationPresent(mg.tonymushah.dbconnection.utils.annotations.Table.class) == false) {
             throw new Exception("@Table not specified in class " + to_useClass.getName());
         }
-        TCeutils to_useCeutils = new TCeutils(to_use);
+        TCeutils<T> to_useCeutils = new TCeutils<T>(to_use);
         String query = new String();
         Field[] primarKeys = TUtils.get_filteredFieldsBy_Annotations(to_useCeutils.getFields(), PrimaryKey.class);
         if (primarKeys == null || primarKeys.length == 0) {
@@ -376,12 +275,12 @@ public class DBConnect {
         return this.executeQuery_withoutConnect_Close(query);
     }
 
-    public boolean update(Object to_use) throws Exception {
-        Class to_useClass = to_use.getClass();
+    public <T> boolean update(T to_use) throws Exception {
+        Class<?> to_useClass = to_use.getClass();
         if (to_useClass.isAnnotationPresent(mg.tonymushah.dbconnection.utils.annotations.Table.class) == false) {
             throw new Exception("@Table not specified in class " + to_useClass.getName());
         }
-        TCeutils to_useCeutils = new TCeutils(to_use);
+        TCeutils<T> to_useCeutils = new TCeutils<T>(to_use);
         String query = new String();
         Field[] primarKeys = TUtils.get_filteredFieldsBy_Annotations(to_useCeutils.getFields(), PrimaryKey.class);
         if (primarKeys == null || primarKeys.length == 0) {
@@ -391,7 +290,7 @@ public class DBConnect {
                 .getAnnotationsByType(mg.tonymushah.dbconnection.utils.annotations.Table.class)[0])).name();
         query = "update " + table_name + " set ";
 
-        TCeutils uCeutils = new TCeutils(to_use);
+        TCeutils<T> uCeutils = new TCeutils<T>(to_use);
         Field[] fields = TUtils.get_filteredFieldsBy_Annotations(uCeutils.getFields(), Column.class);
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
@@ -445,7 +344,7 @@ public class DBConnect {
                 // System.out.println("index :" + index);
                 if (index == 0) {
                     array[0] = to_useClass.getConstructor().newInstance();
-                    TCeutils toUse = new TCeutils(array[0]);
+                    TCeutils<T> toUse = new TCeutils<T>(array[0]);
                     for (Field object : toUse.getFields()) {
                         try {
                             toUse.setInField(object.getName(), res.getString(
@@ -483,13 +382,13 @@ public class DBConnect {
     }
 
     public ResultSet invoke(String func_name, Object ...args) throws Exception{
-        return SQL_Function.invoke(this, func_name, args);
+        return SQL_Function.invoke(this.connection, func_name, args);
     }
-    public Object[] invoke(String func_name, Class to_use, Object ...args) throws Exception{
+    public <T> T[] invoke(String func_name, Class<T> to_use, Object ...args) throws Exception{
         ResultSet res = this.invoke(func_name, args);
         return this.resultset_toObjects(res, to_use);
     }
     public Object invoke_getObject(String func_name, Object ...args) throws Exception{
-        return SQL_Function.invoke_getObject(this, func_name, args);
+        return SQL_Function.invoke_getObject(this.connection, func_name, args);
     }
 }

@@ -2,6 +2,7 @@ package mg.tonymushah.dbconnection;
 
 import java.lang.reflect.Field;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 
 import mg.tonymushah.dbconnection.utils.Insert_into_Postgre;
 import mg.tonymushah.dbconnection.utils.annotations.Column;
@@ -9,21 +10,52 @@ import mg.tonymushah.dbconnection.utils.annotations.PrimaryKey;
 import mg.tonymushah.utils.TCeutils;
 import mg.tonymushah.utils.TUtils;
 
-public class PostGresDefault extends DBConnect{
-    public PostGresDefault(){
-        super("jdbc", 
-            "postgresql", 
-            null, 
-            "127.0.0.1", 
-            5432, 
-            "test_tony", 
-            "test_tony", 
-            "etu001844"
-        );
+public class PostGresConnect extends DBConnect{
+    private String host;
+    private int port;
+    private String dbname;
+    private String username;
+    private String password;
+    public String getHost() {
+        return host;
+    }
+    public void setHost(String host) {
+        this.host = host;
+    }
+    public int getPort() {
+        return port;
+    }
+    public void setPort(int port) {
+        this.port = port;
+    }
+    public String getDbname() {
+        return dbname;
+    }
+    public void setDbname(String dbname) {
+        this.dbname = dbname;
+    }
+    public String getUsername() {
+        return username;
+    }
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    public String getPassword() {
+        return password;
+    }
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    public PostGresConnect(String host, int port, String dbName, String username, String password){
+        this.setPort(port);
+        this.setHost(host);
+        this.setDbname(dbName);
+        this.setUsername(username);
+        this.setPassword(password);
     }
     @Override
-    public void connect() throws Exception{
-        String url = "" + this.getApi() + ":" + this.getDbtype() + "://" + this.getHost() + ":" + this.getPort() + "/" + this.getDbName();
+    public void connect() throws SQLException{
+        String url = String.format("jdbc:postgresql://%s:%d/%s", this.getHost(), this.getPort(), this.getDbname());
         this.setConnection(DriverManager.getConnection(url, this.getUsername(), this.getPassword()));
         //System.out.println(url);
         this.getConnection().setAutoCommit(false);

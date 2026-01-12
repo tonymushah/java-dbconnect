@@ -3,7 +3,6 @@ package mg.tonymushah.utils;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.nio.*;
 import java.util.*;
 
 import mg.tonymushah.utils.class_t_file.ArClass_File;
@@ -327,7 +326,8 @@ public class TUtils {
                 to_take.set(to_use, value);
             }else{
                 for (int i = 0; i < basic_classes().length; i++) {
-                    Class<?> toc_use = Class.forName("java.lang." + basic_classes()[i]);
+                    // I forgot why i need this
+                    // Class<?> toc_use = Class.forName("java.lang." + basic_classes()[i]);
                     try {
                         switch (i) {
                             case 0:
@@ -628,8 +628,8 @@ public class TUtils {
     }
     public static<T extends Object> int search_length(T[] array, String text){
         int number = 0;
-        for (Object object : array) {
-            TCeutils to_use = new TCeutils(object);
+        for (T object : array) {
+            TCeutils<T> to_use = new TCeutils<T>(object);
             for (int i = 0; i < to_use.getFieldslength() ; i++) {
                 if(String.valueOf(to_use.getInField(to_use.getFields()[i])).indexOf(text) != -1){
                     number++;

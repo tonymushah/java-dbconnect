@@ -1,11 +1,10 @@
 package mg.tonymushah.dbconnection.utils;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 
-import mg.tonymushah.dbconnection.DBConnect;
-
 public class SQL_Function {
-    public static ResultSet invoke(DBConnect connect, String name, Object ...args) throws Exception{
+    public static ResultSet invoke(Connection connect, String name, Object ...args) throws Exception{
         String query = name + "(" ;
         for (int i = 0; i < args.length; i++) {
             Object object = args[i];
@@ -23,7 +22,7 @@ public class SQL_Function {
         query = String.format("select * from " + query + ")", args);
         return connect.createStatement().executeQuery(query);
     }
-    public static Object invoke_getObject(DBConnect connect, String name, Object ...args) throws Exception{
+    public static Object invoke_getObject(Connection connect, String name, Object ...args) throws Exception{
         ResultSet resultSet = SQL_Function.invoke(connect, name, args);
         resultSet.next();
         return resultSet.getObject(name);
