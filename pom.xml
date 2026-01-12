@@ -6,7 +6,7 @@
 
   <groupId>mg.tonymushah</groupId>
   <artifactId>java-dbconnect</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0-SNAPSHOT.1</version>
 
   <name>java-dbconnect</name>
   <description>A simple java-dbconnect.</description>
